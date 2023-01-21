@@ -26,7 +26,7 @@ impl GrepOptions {
                 Some(v) => v.map(String::from).collect(),
                 None => vec![],
              },
-
+             
              search_subdir    : matches.is_present("subdir"),
              ignore_case      : matches.is_present("ignore"),
              display_pattern  : matches.is_present("verbose"),
@@ -53,11 +53,16 @@ fn main() {
 
     if options.files.is_empty() {
         let stdin = io::stdin();
-        search_file(&reg, stdin.lock(), &options);
+        search_file(&reg, stdin.lock(), &options, &"stdin".to_string(), false);
     } else {
+        let single_file = if options.files.len() == 1 {
+            true
+        } else {
+            false
+        };
         for name in &options.files {
             let f = File::open(name).unwrap();  // todo error stuff
-            search_file(&reg, BufReader::new(f), &options);
+            search_file(&reg, BufReader::new(f), &options, name, single_file);
         }
     }
 }
@@ -109,12 +114,19 @@ fn parse_command_line() -> GrepOptions
     GrepOptions::new(matches)
 }
 
-fn search_file<R>(reg: &Regex, reader: R, _options: &GrepOptions) where R: BufRead
+fn search_file<R>(reg: &Regex, reader: R, options: &GrepOptions, filename: &String, single_file: bool) where R: BufRead
 {
     for line_result in reader.lines() {
         let line = line_result.unwrap();
         if reg.is_match(&line) {
-            println!("{}", line);
+            if options.display_filename {
+                println!("{}", filename);
+                break;
+            } else if single_file {
+                println!("{}", line);
+            } else {
+                println!("{}: {}", filename, line);
+            }
         }
     }
 }
