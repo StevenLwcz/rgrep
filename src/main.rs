@@ -53,13 +53,9 @@ fn main() {
 
     if options.files.is_empty() {
         let stdin = io::stdin();
-        search_file(&reg, stdin.lock(), &options, &"stdin".to_string(), false);
+        search_file(&reg, stdin.lock(), &options, &"stdin".to_string(), true);
     } else {
-        let single_file = if options.files.len() == 1 {
-            true
-        } else {
-            false
-        };
+        let single_file = options.files.len() == 1;
         for name in &options.files {
             let f = File::open(name).unwrap();  // todo error stuff
             search_file(&reg, BufReader::new(f), &options, name, single_file);
