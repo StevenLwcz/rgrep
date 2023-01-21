@@ -1,6 +1,8 @@
 use clap::{App, Arg, ArgMatches};
-
 use regex::Regex;
+use std::io::{self, BufReader};
+use std::io::prelude::*;
+use std::fs::File;
 
 struct GrepOptions {
     pattern          : String,
@@ -37,13 +39,6 @@ fn main() {
 
     let options = parse_command_line();
 
-    println!("{}", options.pattern);
-    println!("{:?}", options.files);
-    println!("{}", options.search_subdir);
-    println!("{}", options.ignore_case);
-    println!("{}", options.display_pattern);
-    println!("{}", options.display_filename);
-
     let reg = match Regex::new(&options.pattern) {
         Ok(r) => r,
         Err(err) => {
@@ -56,11 +51,14 @@ fn main() {
         println!("Regex is {:?}", reg);
     }
 
-    let buffer = "Abcde fghij klmm";
-    if reg.is_match(&buffer) {
-        println!("Found");
+    if options.files.is_empty() {
+        let stdin = io::stdin();
+        search_file(&reg, stdin.lock(), &options);
     } else {
-        println!("Not found");
+        for name in &options.files {
+            let f = File::open(name).unwrap();  // todo error stuff
+            search_file(&reg, BufReader::new(f), &options);
+        }
     }
 }
 
@@ -111,16 +109,12 @@ fn parse_command_line() -> GrepOptions
     GrepOptions::new(matches)
 }
 
-
-/*
-fn search_file<BufRead>(pattern: &str, reader: BufRead)
+fn search_file<R>(reg: &Regex, reader: R, _options: &GrepOptions) where R: BufRead
 {
     for line_result in reader.lines() {
-        let line = line_result?;
-        if line.contains(pattern) {
+        let line = line_result.unwrap();
+        if reg.is_match(&line) {
             println!("{}", line);
         }
-    
-
+    }
 }
-*/
