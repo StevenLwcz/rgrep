@@ -1,17 +1,16 @@
 /* TODO
- * filename have wild cards
- * directory search
  * ignore case
  */
+
 use clap::{App, Arg, ArgMatches};
 use regex::Regex;
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
+use glob::glob;
 
 struct GrepOptions {
     pattern          : String,
     files            : Vec<String>,
-    search_subdir    : bool,
     ignore_case      : bool,
     display_pattern  : bool,
     display_filename : bool,
@@ -31,13 +30,14 @@ impl GrepOptions {
                 None => vec![],
              },
              
-             search_subdir    : matches.is_present("subdir"),
              ignore_case      : matches.is_present("ignore"),
              display_pattern  : matches.is_present("verbose"),
              display_filename : matches.is_present("display"),
          }
     }
 }
+
+/* -------------------------------------------------------------- */
 
 fn main() {
 
@@ -60,14 +60,24 @@ fn main() {
     } else {
         let single_file = options.files.len() == 1;
         for name in &options.files {
-            let f = match File::open(name) {
-                Ok(r) => r,
-                Err(err) => {
-                    println!("rgrep: Can't open file {} {}", name, err);
-                    std::process::exit(1);
-                }
+            let gfiles = match glob(name) {
+               Err(err) => {
+                   println!("rgrep: Pattern Error {:?}", err);
+                   std::process::exit(1);
+               },
+               Ok(g) => g
             };
-            search_file(&reg, BufReader::new(f), options.display_filename, name, single_file);
+            for entry in gfiles {
+                let file_name = entry.unwrap();
+                let f = match File::open(&file_name) {
+                    Ok(r) => r,
+                    Err(err) => {
+                        println!("rgrep: Can't open file {} {}", name, err);
+                        std::process::exit(1);
+                    }
+                };
+                search_file(&reg, BufReader::new(f), options.display_filename, name, single_file);
+            };
         };
     };
 }
@@ -91,12 +101,6 @@ fn parse_command_line() -> GrepOptions
                 .long("display")
         )
         .arg(
-            Arg::with_name("subdir")
-                .help("Search sub directories")
-                .short("s")
-                .long("subdir")
-        )
-        .arg(
             Arg::with_name("verbose")
                 .help("Show the pattern")
                 .short("v")
@@ -110,7 +114,7 @@ fn parse_command_line() -> GrepOptions
          )
         .arg(
             Arg::with_name("file")
-            .help("List of files. Wildcards allowed\nIf no file specified, then read from stdin")
+            .help("List of files. Glob pattens allowed\nIf no file specified, then read from stdin\nSearch all Rust files in current and subdirectories for Error: rgrep Error **/*.rs")
             .multiple(true)
             .index(2)
          )
