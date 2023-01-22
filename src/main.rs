@@ -1,5 +1,4 @@
 /* TODO
- * improve error handing for unwrap()
  * filename have wild cards
  * directory search
  * ignore case
@@ -123,7 +122,13 @@ fn parse_command_line() -> GrepOptions
 fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &String, single_file: bool) where R: BufRead
 {
     for line_result in reader.lines() {
-        let line = line_result.unwrap();
+        let line = match line_result {
+            Ok(r) => r,
+            Err(err) => {
+                println!("rgrep: Problem reading from {} {}", filename, err);
+                break;
+            }
+        };
         if reg.is_match(&line) {
             if display_filename {
                 println!("{}", filename);
