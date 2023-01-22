@@ -6,8 +6,7 @@
  */
 use clap::{App, Arg, ArgMatches};
 use regex::Regex;
-use std::io::{self, BufReader};
-use std::io::prelude::*;
+use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 
 struct GrepOptions {
@@ -58,15 +57,20 @@ fn main() {
     }
 
     if options.files.is_empty() {
-        let stdin = io::stdin();
-        search_file(&reg, stdin.lock(), false, &"stdin".to_string(), true);
+        search_file(&reg, io::stdin().lock(), false, &"stdin".to_string(), true);
     } else {
         let single_file = options.files.len() == 1;
         for name in &options.files {
-            let f = File::open(name).unwrap();  // todo error stuff
+            let f = match File::open(name) {
+                Ok(r) => r,
+                Err(err) => {
+                    println!("rgrep: Can't open file {} {}", name, err);
+                    std::process::exit(1);
+                }
+            };
             search_file(&reg, BufReader::new(f), options.display_filename, name, single_file);
-        }
-    }
+        };
+    };
 }
 
 fn parse_command_line() -> GrepOptions
