@@ -48,13 +48,13 @@ fn main() {
     let reg = match Regex::new(&options.pattern) {
         Ok(r) => r,
         Err(err) => {
-            println!("Error in pattern: {}", err);
+            println!("rgrep: Error in pattern: {}", err);
             std::process::exit(1);
         }
     };
  
     if options.display_pattern {
-        println!("Regex is {:?}", reg);
+        println!("rgrep: Regex is {:?}", reg);
     }
 
     if options.files.is_empty() {
@@ -101,7 +101,7 @@ fn parse_command_line() -> GrepOptions
         )
         .arg(
             Arg::with_name("pattern")
-            .help("Rust regex regular expression")
+            .help("Rust regular expression")
             .required(true)
             .index(1)
          )
