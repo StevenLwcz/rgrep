@@ -1,3 +1,9 @@
+/* TODO
+ * improve error handing for unwrap()
+ * filename have wild cards
+ * directory search
+ * ignore case
+ */
 use clap::{App, Arg, ArgMatches};
 use regex::Regex;
 use std::io::{self, BufReader};
@@ -53,12 +59,12 @@ fn main() {
 
     if options.files.is_empty() {
         let stdin = io::stdin();
-        search_file(&reg, stdin.lock(), &options, &"stdin".to_string(), true);
+        search_file(&reg, stdin.lock(), false, &"stdin".to_string(), true);
     } else {
         let single_file = options.files.len() == 1;
         for name in &options.files {
             let f = File::open(name).unwrap();  // todo error stuff
-            search_file(&reg, BufReader::new(f), &options, name, single_file);
+            search_file(&reg, BufReader::new(f), options.display_filename, name, single_file);
         }
     }
 }
@@ -110,12 +116,12 @@ fn parse_command_line() -> GrepOptions
     GrepOptions::new(matches)
 }
 
-fn search_file<R>(reg: &Regex, reader: R, options: &GrepOptions, filename: &String, single_file: bool) where R: BufRead
+fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &String, single_file: bool) where R: BufRead
 {
     for line_result in reader.lines() {
         let line = line_result.unwrap();
         if reg.is_match(&line) {
-            if options.display_filename {
+            if display_filename {
                 println!("{}", filename);
                 break;
             } else if single_file {
