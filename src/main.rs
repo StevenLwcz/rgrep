@@ -130,8 +130,8 @@ fn parse_command_line() -> GrepOptions
          )
         .arg(
             Arg::with_name("file")
-            .help("List of files. Glob pattens allowed\nIf no file specified,\
-             then read from stdin\nSearch all Rust files in current and subdirectories for\
+            .help("List of files. Glob pattens allowed\nIf no file specified \
+             then read from stdin\nSearch all Rust files in current and subdirectories for \
              purple:\nrgrep purple \"**/*.rs\"\n\
              https://docs.rs/glob/0.3.1/glob/struct.Pattern.html")
             .multiple(true)
