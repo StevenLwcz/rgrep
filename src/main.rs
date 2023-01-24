@@ -43,7 +43,13 @@ fn main() {
 
     let options = parse_command_line();
 
-    let reg = match Regex::new(&options.pattern) {
+    let pattern;
+    if options.ignore_case {
+        pattern = "(?i)".to_string() + &options.pattern;
+    } else {
+        pattern = options.pattern;
+    }
+    let reg = match Regex::new(&pattern) {
         Ok(r) => r,
         Err(err) => {
             println!("rgrep: Error in pattern: {}", err);
