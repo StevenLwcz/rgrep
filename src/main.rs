@@ -52,23 +52,30 @@ fn main() {
     };
  
     if options.display_pattern {
-        println!("rgrep: Regex is {:?}", reg);
+        println!("rgrep: Regex is {:?} File count is {}", reg, options.files.len());
     }
 
     if options.files.is_empty() {
         search_file(&reg, io::stdin().lock(), false, &"stdin".to_string(), true);
     } else {
-        let single_file = options.files.len() == 1;
+        let mut single_file = options.files.len() == 1;
         for name in &options.files {
             let gfiles = match glob(name) {
-               Err(err) => {
-                   println!("rgrep: Pattern Error {:?}", err);
-                   std::process::exit(1);
-               },
-               Ok(g) => g
+                Err(err) => {
+                    println!("rgrep: Pattern Error {:?}", err);
+                    std::process::exit(1);
+                },
+                Ok(g) => g
             };
+            let mut count = 0;
             for entry in gfiles {
                 let file_name = entry.unwrap();
+                let file_name = file_name.to_str().unwrap();
+                /* pattern got expanded - hopefully */
+                if count == 0 && file_name != name {
+                    single_file = false;
+                }
+                count+=1;
                 let f = match File::open(&file_name) {
                     Ok(r) => r,
                     Err(err) => {
@@ -76,8 +83,11 @@ fn main() {
                         std::process::exit(1);
                     }
                 };
-                search_file(&reg, BufReader::new(f), options.display_filename, name, single_file);
+                search_file(&reg, BufReader::new(f), options.display_filename, file_name , single_file);
             };
+            if count == 0 {
+                println!("rgrep: {} not found", name);
+            }
         };
     };
 }
@@ -114,7 +124,7 @@ fn parse_command_line() -> GrepOptions
          )
         .arg(
             Arg::with_name("file")
-            .help("List of files. Glob pattens allowed\nIf no file specified, then read from stdin\nSearch all Rust files in current and subdirectories for Error: rgrep Error **/*.rs")
+            .help("List of files. Glob pattens allowed\nIf no file specified, then read from stdin\nSearch all Rust files in current and subdirectories for purple:\nrgrep purple \"**/*.rs\"")
             .multiple(true)
             .index(2)
          )
@@ -123,7 +133,7 @@ fn parse_command_line() -> GrepOptions
     GrepOptions::new(matches)
 }
 
-fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &String, single_file: bool) where R: BufRead
+fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &str, single_file: bool) where R: BufRead
 {
     for line_result in reader.lines() {
         let line = match line_result {
