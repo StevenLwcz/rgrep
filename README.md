@@ -27,3 +27,9 @@ I'm learning Rust. What else does one write for their first app? :)
                    rgrep purple "**/*.rs"  
                    https://docs.rs/glob/0.3.1/glob/struct.Pattern.html  
     
+
+
+TODO
+# Add tests
+# Add action to build and run tests
+# Create 1st release/tag with Windows and Linux binary
