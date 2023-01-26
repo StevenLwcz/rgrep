@@ -76,15 +76,15 @@ fn main() {
             for entry in gfiles {
                 let file_name = entry.unwrap();
                 let file_name = file_name.to_str().unwrap();
-                /* pattern got expanded - hopefully */
+                   /* if file_name != name then a pattern got expanded so multi files */
                 if count == 0 && file_name != name {
                     single_file = false;
                 }
                 count+=1;
-                let f = match File::open(&file_name) {
+                let f = match File::open(file_name) {
                     Ok(r) => r,
                     Err(err) => {
-                        println!("rgrep: Can't open file {} - {}", name, err);
+                        println!("rgrep: Can't open file {} - {}", file_name, err);
                         std::process::exit(1);
                     }
                 };
