@@ -1,5 +1,4 @@
 /* TODO
- * ignore case
  */
 
 use clap::{App, Arg, ArgMatches};
@@ -62,7 +61,7 @@ fn main() {
     }
 
     if options.files.is_empty() {
-        search_file(&reg, io::stdin().lock(), false, &"stdin".to_string(), true);
+        search_file(&reg, io::stdin().lock(), false, "stdin", true);
     } else {
         let mut single_file = options.files.len() == 1;
         for name in &options.files {
@@ -85,7 +84,7 @@ fn main() {
                 let f = match File::open(&file_name) {
                     Ok(r) => r,
                     Err(err) => {
-                        println!("rgrep: Can't open file {} {}", name, err);
+                        println!("rgrep: Can't open file {} - {}", name, err);
                         std::process::exit(1);
                     }
                 };
@@ -148,7 +147,7 @@ fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &str
         let line = match line_result {
             Ok(r) => r,
             Err(err) => {
-                println!("rgrep: Problem reading from {} {}", filename, err);
+                println!("rgrep: Problem reading from {} - {}", filename, err);
                 break;
             }
         };
