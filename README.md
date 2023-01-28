@@ -31,5 +31,4 @@ I'm learning Rust. What else does one write for their first app? :)
 
 TODO
 1. Add tests
-1. Add action to build and run tests
 1. Create 1st release/tag with Windows and Linux binary
