@@ -1,10 +1,13 @@
 /* TODO
+ * stop errors from directory reads and option to turn  back on
+ * of people are fussy
  */
 
 use clap::{App, Arg, ArgMatches};
 use regex::Regex;
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
+use std::path::Path;
 use glob::glob;
 
 struct GrepOptions {
@@ -80,8 +83,15 @@ fn main() {
                 if count == 0 && file_name != name {
                     single_file = false;
                 }
+                let path = Path::new(&file_name);
+                if !single_file {
+                    if path.is_dir() {
+                        continue;
+                    }
+                }
                 count+=1;
-                let f = match File::open(file_name) {
+                // let f = match File::open(file_name) {
+                let f = match File::open(path) {
                     Ok(r) => r,
                     Err(err) => {
                         println!("rgrep: Can't open file {} - {}", file_name, err);

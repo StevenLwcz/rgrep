@@ -1,5 +1,5 @@
 [package]
-name = "rgrep"
+name = "grepr"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,3 +9,6 @@ edition = "2021"
 regex = "1.7.1"
 clap = "2.33.0"
 glob = "0.3.1"
+
+[dev-dependencies]
+assert_cmd = "1"
