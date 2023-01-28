@@ -1,6 +1,5 @@
 /* TODO
- * stop errors from directory reads and option to turn  back on
- * of people are fussy
+ * Think about errors when stuff is directory
  */
 
 use clap::{App, Arg, ArgMatches};
@@ -9,6 +8,11 @@ use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::Path;
 use glob::glob;
+
+const PATTERN_NOT_FOUND: i32 = 1;
+const BAD_PATTERN: i32 = 2;
+const BAD_GLOB_PATTERN: i32 = 3;
+const OPEN_FILE_ERROR: i32 = 4;
 
 struct GrepOptions {
     pattern          : String,
@@ -54,24 +58,25 @@ fn main() {
     let reg = match Regex::new(&pattern) {
         Ok(r) => r,
         Err(err) => {
-            println!("rgrep: Error in pattern: {}", err);
-            std::process::exit(1);
+            println!("grepr: Error in pattern: {}", err);
+            std::process::exit(BAD_PATTERN);
         }
     };
  
     if options.display_pattern {
-        println!("rgrep: Regex is {:?} File count is {}", reg, options.files.len());
+        println!("grepr: Regex is {:?} File count is {}", reg, options.files.len());
     }
 
+    let mut found = false;
     if options.files.is_empty() {
-        search_file(&reg, io::stdin().lock(), false, "stdin", true);
+        found = search_file(&reg, io::stdin().lock(), false, "stdin", true);
     } else {
         let mut single_file = options.files.len() == 1;
         for name in &options.files {
             let gfiles = match glob(name) {
                 Err(err) => {
-                    println!("rgrep: Pattern Error {:?}", err);
-                    std::process::exit(2);
+                    println!("grepr: Pattern Error {:?}", err);
+                    std::process::exit(BAD_GLOB_PATTERN);
                 },
                 Ok(g) => g
             };
@@ -94,17 +99,20 @@ fn main() {
                 let f = match File::open(path) {
                     Ok(r) => r,
                     Err(err) => {
-                        println!("rgrep: Can't open file {} - {}", file_name, err);
-                        std::process::exit(3);
+                        println!("grepr: Can't open file {} - {}", file_name, err);
+                        std::process::exit(OPEN_FILE_ERROR);
                     }
                 };
-                search_file(&reg, BufReader::new(f), options.display_filename, file_name , single_file);
+                found = search_file(&reg, BufReader::new(f), options.display_filename, file_name , single_file);
             };
             if count == 0 {
-                println!("rgrep: {} not found", name);
+                println!("grepr: {} not found", name);
             }
         };
     };
+    if !found {
+        std::process::exit(PATTERN_NOT_FOUND);
+    }
 }
 
 fn parse_command_line() -> GrepOptions
@@ -141,7 +149,7 @@ fn parse_command_line() -> GrepOptions
             Arg::with_name("file")
             .help("List of files. Glob pattens allowed\nIf no file specified \
              then read from stdin\nSearch all Rust files in current and subdirectories for \
-             purple:\nrgrep purple \"**/*.rs\"\n\
+             purple:\ngrepr purple \"**/*.rs\"\n\
              https://docs.rs/glob/0.3.1/glob/struct.Pattern.html")
             .multiple(true)
             .index(2)
@@ -151,17 +159,19 @@ fn parse_command_line() -> GrepOptions
     GrepOptions::new(matches)
 }
 
-fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &str, single_file: bool) where R: BufRead
+fn search_file <R>(reg: &Regex, reader: R, display_filename: bool, filename: &str, single_file: bool) -> bool where R: BufRead
 {
+    let mut found = false;
     for line_result in reader.lines() {
         let line = match line_result {
             Ok(r) => r,
             Err(err) => {
-                println!("rgrep: Problem reading from {} - {}", filename, err);
+                println!("grepr: Problem reading from {} - {}", filename, err);
                 break;
             }
         };
         if reg.is_match(&line) {
+            found = true;
             if display_filename {
                 println!("{}", filename);
                 break;
@@ -172,4 +182,5 @@ fn search_file<R>(reg: &Regex, reader: R, display_filename: bool, filename: &str
             }
         }
     }
+    found
 }
