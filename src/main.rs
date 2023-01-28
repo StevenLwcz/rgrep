@@ -71,7 +71,7 @@ fn main() {
             let gfiles = match glob(name) {
                 Err(err) => {
                     println!("rgrep: Pattern Error {:?}", err);
-                    std::process::exit(1);
+                    std::process::exit(2);
                 },
                 Ok(g) => g
             };
@@ -95,7 +95,7 @@ fn main() {
                     Ok(r) => r,
                     Err(err) => {
                         println!("rgrep: Can't open file {} - {}", file_name, err);
-                        std::process::exit(1);
+                        std::process::exit(3);
                     }
                 };
                 search_file(&reg, BufReader::new(f), options.display_filename, file_name , single_file);
