@@ -10,7 +10,7 @@ fn test1() {
     // basic it works test
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd
-    .arg("pi")
+    .arg("qi")
     .write_stdin("pink")
     .assert()
     .success()
