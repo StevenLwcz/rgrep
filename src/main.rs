@@ -109,8 +109,8 @@ fn main() {
 
 fn parse_command_line() -> GrepOptions
 {
-    let matches = App::new("rgrep")
-        .version("0.1.0")
+    let matches = App::new("grepr")
+        .version("1.0.0")
         .author("Steven Lalewicz")
         .about("A simple grep using Rust regular expressions\nhttps://docs.rs/regex/latest/regex/#syntax")
         .arg(

@@ -2,15 +2,15 @@ A simple version of grep written in Rust using Rust regular expressions.
 
 I'm learning Rust. What else does one write for their first app? :)
 
-    rgrep --help
+    grepr --help
 
-    rgrep 0.1.0  
+    grepr 0.1.0  
     Steven Lalewicz  
     A simple grep using Rust regular expressions  
     https://docs.rs/regex/latest/regex/#syntax  
     
     USAGE:  
-      rgrep [FLAGS] <pattern> [file]...  
+      grepr [FLAGS] <pattern> [file]...  
    
     FLAGS:  
       -d, --display    Only display filenames of files which match pattern  
@@ -30,5 +30,5 @@ I'm learning Rust. What else does one write for their first app? :)
 
 
 TODO
-1. Add tests
+1. Add more tests
 1. Create 1st release/tag with Windows and Linux binary
