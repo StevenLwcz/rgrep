@@ -67,6 +67,20 @@ fn test5() {
 
 #[test]
 fn test6() {
+    // test multo file
+    let testfile = "tests/expected/test4.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("red")
+    .arg("tests/files/fruits.txt")
+    .arg("tests/files/rainbow.txt")
+    .assert()
+    .success()
+    .stdout(expected);
+}
+
+#[test]
+fn test7() {
     // test --ignore
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
