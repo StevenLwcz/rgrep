@@ -54,7 +54,7 @@ fn main() {
     let reg = match Regex::new(&pattern) {
         Ok(r) => r,
         Err(err) => {
-            println!("grepr: Error in pattern: {}", err);
+            eprintln!("grepr: Error in pattern: {}", err);
             std::process::exit(BAD_PATTERN);
         }
     };
@@ -71,7 +71,7 @@ fn main() {
         for name in &options.files {
             let gfiles = match glob(name) {
                 Err(err) => {
-                    println!("grepr: Pattern Error {:?}", err);
+                    eprintln!("grepr: Pattern Error {:?}", err);
                     std::process::exit(BAD_GLOB_PATTERN);
                 },
                 Ok(g) => g
@@ -95,14 +95,14 @@ fn main() {
                 let f = match File::open(path) {
                     Ok(r) => r,
                     Err(err) => {
-                        println!("grepr: Can't open file {} - {}", file_name, err);
+                        eprintln!("grepr: Can't open file {} - {}", file_name, err);
                         std::process::exit(OPEN_FILE_ERROR);
                     }
                 };
                 found = search_file(&reg, BufReader::new(f), options.display_filename, file_name , single_file);
             };
             if count == 0 {
-                println!("grepr: {} not found", name);
+                eprintln!("grepr: {} not found", name);
             }
         };
     };
@@ -162,7 +162,7 @@ fn search_file <R>(reg: &Regex, reader: R, display_filename: bool, filename: &st
         let line = match line_result {
             Ok(r) => r,
             Err(err) => {
-                println!("grepr: Problem reading from {} - {}", filename, err);
+                eprintln!("grepr: Problem reading from {} - {}", filename, err);
                 break;
             }
         };
