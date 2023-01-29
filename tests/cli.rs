@@ -12,7 +12,7 @@ fn test1() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd
     .arg("pi")
-    .write_stdin("pink")
+    .write_stdin("alpha\nbeta\npink\ndelta\ngamma")
     .assert()
     .success()
     .stdout("pink\n");
@@ -67,7 +67,7 @@ fn test5() {
 
 #[test]
 fn test6() {
-    // test multo file
+    // test multi file
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
