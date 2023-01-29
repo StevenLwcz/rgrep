@@ -4,7 +4,7 @@ I'm learning Rust. What else does one write for their first app? :)
 
     grepr --help
 
-    grepr 0.1.0  
+    grepr 1.0.0  
     Steven Lalewicz  
     A simple grep using Rust regular expressions  
     https://docs.rs/regex/latest/regex/#syntax  
@@ -30,5 +30,4 @@ I'm learning Rust. What else does one write for their first app? :)
 
 
 TODO
-1. Add more tests
 1. Create 1st release/tag with Windows and Linux binary

@@ -1,7 +1,3 @@
-/* TODO
- * Think about errors when stuff is directory
- */
-
 use clap::{App, Arg, ArgMatches};
 use regex::Regex;
 use std::io::{self, BufReader, BufRead};

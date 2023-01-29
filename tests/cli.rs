@@ -67,11 +67,13 @@ fn test5() {
 
 #[test]
 fn test6() {
-    // test multi file
+    // test --ignore
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd.arg("red").arg("tests/files/fruits.txt")
+    cmd.arg("--ignore")
+    .arg("RED")
+    .arg("tests/files/fruits.txt")
     .arg("tests/files/rainbow.txt")
     .assert()
     .success()
