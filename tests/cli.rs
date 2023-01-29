@@ -64,3 +64,16 @@ fn test5() {
     .success()
     .stdout(expected);
 }
+
+#[test]
+fn test6() {
+    // test multi file
+    let testfile = "tests/expected/test4.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("red").arg("tests/files/fruits.txt")
+    .arg("tests/files/rainbow.txt")
+    .assert()
+    .success()
+    .stdout(expected);
+}
