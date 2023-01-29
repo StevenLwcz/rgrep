@@ -1,4 +1,5 @@
 use assert_cmd::Command;
+use std::fs;
 
 const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
@@ -7,7 +8,7 @@ const BAD_PATTERN: i32 = 2;
 
 #[test]
 fn test1() {
-    // basic it works test
+    // basic it works test from stdin
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd
     .arg("pi")
@@ -19,7 +20,7 @@ fn test1() {
 
 #[test]
 fn test2() {
-    // detects  bad regular expressiom
+    // detects bad regular expressiom
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd
     .arg("[pi")
@@ -38,4 +39,28 @@ fn test3() {
     .assert()
     .failure()
     .code(PATTERN_NOT_FOUND);
+}
+
+#[test]
+fn test4() {
+    // test **/*.txt glob expansion
+    let testfile = "tests/expected/test4.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("red").arg("**/*.txt")
+    .assert()
+    .success()
+    .stdout(expected);
+}
+
+#[test]
+fn test5() {
+    // test single file
+    let testfile = "tests/expected/test5.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("re").arg("tests/files/fruits.txt")
+    .assert()
+    .success()
+    .stdout(expected);
 }

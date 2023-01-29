@@ -1,0 +1,7 @@
+apple:red
+orange:orange
+bananna:yellow
+pear:green
+blueberry:blue
+grape:indigo
+plum:purple
