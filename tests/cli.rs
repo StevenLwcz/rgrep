@@ -20,13 +20,16 @@ fn test1() {
 
 #[test]
 fn test2() {
-    // detects bad regular expressiom
+    // detects bad regular expressiom and error goes to stderr
+    let testfile = "tests/expected/test2.text";
+    let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd
     .arg("[pi")
     .assert()
     .failure()
-    .code(BAD_PATTERN);
+    .code(BAD_PATTERN)
+    .stderr(expected);
 }
 
 #[test]

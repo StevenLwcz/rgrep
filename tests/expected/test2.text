@@ -1,0 +1,4 @@
+grepr: Error in pattern: regex parse error:
+    [pi
+    ^
+error: unclosed character class
