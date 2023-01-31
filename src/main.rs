@@ -1,7 +1,4 @@
-/* todo
- * use RegexBuilder to set case insentiviity
- * Make pattrn in GrepOptions a Regex
- * display_filename is kind of redundant since it is displayed with mutli-files :)
+/* TODO
  * add -c count option
  */
 
