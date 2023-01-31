@@ -1,9 +1,16 @@
+/* todo
+ * use RegexBuilder to set case insentiviity
+ * Make pattrn in GrepOptions a Regex
+ * display_filename is kind of redundant since it is displayed with mutli-files :)
+ * add -c count option
+ */
+
 use clap::{App, Arg, ArgMatches};
-use regex::Regex;
-use std::io::{self, BufReader, BufRead};
-use std::fs::File;
-use std::path::Path;
 use glob::glob;
+use regex::Regex;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
+use std::path::Path;
 
 const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
@@ -11,38 +18,36 @@ const BAD_GLOB_PATTERN: i32 = 3;
 const OPEN_FILE_ERROR: i32 = 4;
 
 struct GrepOptions {
-    pattern          : String,
-    files            : Vec<String>,
-    ignore_case      : bool,
-    display_pattern  : bool,
-    display_filename : bool,
+    pattern: String,
+    files: Vec<String>,
+    ignore_case: bool,
+    display_pattern: bool,
+    display_filename: bool,
 }
 
 impl GrepOptions {
-
     fn new(matches: ArgMatches) -> GrepOptions {
         GrepOptions {
-            pattern : match matches.value_of("pattern") {
+            pattern: match matches.value_of("pattern") {
                 Some(v) => v.to_string(),
-                None => "".to_string()
+                None => "".to_string(),
             },
 
-            files : match matches.values_of("file") {
+            files: match matches.values_of("file") {
                 Some(v) => v.map(String::from).collect(),
                 None => vec![],
-             },
-             
-             ignore_case      : matches.is_present("ignore"),
-             display_pattern  : matches.is_present("verbose"),
-             display_filename : matches.is_present("display"),
-         }
+            },
+
+            ignore_case: matches.is_present("ignore"),
+            display_pattern: matches.is_present("verbose"),
+            display_filename: matches.is_present("display"),
+        }
     }
 }
 
 /* -------------------------------------------------------------- */
 
 fn main() {
-
     let options = parse_command_line();
 
     let pattern;
@@ -58,9 +63,13 @@ fn main() {
             std::process::exit(BAD_PATTERN);
         }
     };
- 
+
     if options.display_pattern {
-        println!("grepr: Regex is {:?} File count is {}", reg, options.files.len());
+        eprintln!(
+            "grepr: Regex is {:?} File count is {}",
+            reg,
+            options.files.len()
+        );
     }
 
     let mut found = false;
@@ -73,14 +82,14 @@ fn main() {
                 Err(err) => {
                     eprintln!("grepr: Pattern Error {:?}", err);
                     std::process::exit(BAD_GLOB_PATTERN);
-                },
-                Ok(g) => g
+                }
+                Ok(g) => g,
             };
             let mut count = 0;
             for entry in gfiles {
                 let file_name = entry.unwrap();
                 let file_name = file_name.to_str().unwrap();
-                   /* if file_name != name then a pattern got expanded so multi files */
+                /* if file_name != name then a pattern got expanded so multi files */
                 if count == 0 && file_name != name {
                     single_file = false;
                 }
@@ -90,7 +99,7 @@ fn main() {
                         continue;
                     }
                 }
-                count+=1;
+                count += 1;
                 // let f = match File::open(file_name) {
                 let f = match File::open(path) {
                     Ok(r) => r,
@@ -99,20 +108,25 @@ fn main() {
                         std::process::exit(OPEN_FILE_ERROR);
                     }
                 };
-                found = search_file(&reg, BufReader::new(f), options.display_filename, file_name , single_file);
-            };
+                found = search_file(
+                    &reg,
+                    BufReader::new(f),
+                    options.display_filename,
+                    file_name,
+                    single_file,
+                );
+            }
             if count == 0 {
                 eprintln!("grepr: {} not found", name);
             }
-        };
+        }
     };
     if !found {
         std::process::exit(PATTERN_NOT_FOUND);
     }
 }
 
-fn parse_command_line() -> GrepOptions
-{
+fn parse_command_line() -> GrepOptions {
     let matches = App::new("grepr")
         .version("1.0.0")
         .author("Steven Lalewicz")
@@ -155,7 +169,15 @@ fn parse_command_line() -> GrepOptions
     GrepOptions::new(matches)
 }
 
-fn search_file <R>(reg: &Regex, reader: R, display_filename: bool, filename: &str, single_file: bool) -> bool where R: BufRead
+fn search_file<R>(
+    reg: &Regex,
+    reader: R,
+    display_filename: bool,
+    filename: &str,
+    single_file: bool,
+) -> bool
+where
+    R: BufRead,
 {
     let mut found = false;
     for line_result in reader.lines() {

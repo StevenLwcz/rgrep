@@ -10,12 +10,11 @@ const BAD_PATTERN: i32 = 2;
 fn test1() {
     // basic it works test from stdin
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd
-    .arg("pi")
-    .write_stdin("alpha\nbeta\npink\ndelta\ngamma")
-    .assert()
-    .success()
-    .stdout("pink\n");
+    cmd.arg("pi")
+        .write_stdin("alpha\nbeta\npink\ndelta\ngamma")
+        .assert()
+        .success()
+        .stdout("pink\n");
 }
 
 #[test]
@@ -24,24 +23,22 @@ fn test2() {
     let testfile = "tests/expected/test2.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd
-    .arg("[pi")
-    .assert()
-    .failure()
-    .code(BAD_PATTERN)
-    .stderr(expected);
+    cmd.arg("[pi")
+        .assert()
+        .failure()
+        .code(BAD_PATTERN)
+        .stderr(expected);
 }
 
 #[test]
 fn test3() {
     // test 1 is returned if expression not found
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd
-    .arg("pi")
-    .write_stdin("cheese")
-    .assert()
-    .failure()
-    .code(PATTERN_NOT_FOUND);
+    cmd.arg("pi")
+        .write_stdin("cheese")
+        .assert()
+        .failure()
+        .code(PATTERN_NOT_FOUND);
 }
 
 #[test]
@@ -50,10 +47,11 @@ fn test4() {
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd.arg("red").arg("**/*.txt")
-    .assert()
-    .success()
-    .stdout(expected);
+    cmd.arg("red")
+        .arg("**/*.txt")
+        .assert()
+        .success()
+        .stdout(expected);
 }
 
 #[test]
@@ -62,10 +60,11 @@ fn test5() {
     let testfile = "tests/expected/test5.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd.arg("re").arg("tests/files/fruits.txt")
-    .assert()
-    .success()
-    .stdout(expected);
+    cmd.arg("re")
+        .arg("tests/files/fruits.txt")
+        .assert()
+        .success()
+        .stdout(expected);
 }
 
 #[test]
@@ -75,11 +74,11 @@ fn test6() {
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("red")
-    .arg("tests/files/fruits.txt")
-    .arg("tests/files/rainbow.txt")
-    .assert()
-    .success()
-    .stdout(expected);
+        .arg("tests/files/fruits.txt")
+        .arg("tests/files/rainbow.txt")
+        .assert()
+        .success()
+        .stdout(expected);
 }
 
 #[test]
@@ -89,10 +88,10 @@ fn test7() {
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--ignore")
-    .arg("RED")
-    .arg("tests/files/fruits.txt")
-    .arg("tests/files/rainbow.txt")
-    .assert()
-    .success()
-    .stdout(expected);
+        .arg("RED")
+        .arg("tests/files/fruits.txt")
+        .arg("tests/files/rainbow.txt")
+        .assert()
+        .success()
+        .stdout(expected);
 }
