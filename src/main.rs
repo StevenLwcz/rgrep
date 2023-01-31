@@ -8,6 +8,7 @@
 use clap::{App, Arg, ArgMatches};
 use glob::glob;
 use regex::Regex;
+use regex::RegexBuilder;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
@@ -18,27 +19,30 @@ const BAD_GLOB_PATTERN: i32 = 3;
 const OPEN_FILE_ERROR: i32 = 4;
 
 struct GrepOptions {
-    pattern: String,
+    regex: Regex,
     files: Vec<String>,
-    ignore_case: bool,
     display_pattern: bool,
     display_filename: bool,
 }
 
 impl GrepOptions {
     fn new(matches: ArgMatches) -> GrepOptions {
+        let pattern = matches.value_of("pattern").unwrap();
         GrepOptions {
-            pattern: match matches.value_of("pattern") {
-                Some(v) => v.to_string(),
-                None => "".to_string(),
-            },
-
             files: match matches.values_of("file") {
                 Some(v) => v.map(String::from).collect(),
                 None => vec![],
             },
+            regex: match RegexBuilder::new(pattern)
+                .case_insensitive(matches.is_present("ignore"))
+                .build() {
+                    Ok(r) => r,
+                    Err(err) => {
+                        eprintln!("grepr: Error in pattern: {}", err);
+                        std::process::exit(BAD_PATTERN);
+                    }
+            },
 
-            ignore_case: matches.is_present("ignore"),
             display_pattern: matches.is_present("verbose"),
             display_filename: matches.is_present("display"),
         }
@@ -50,31 +54,18 @@ impl GrepOptions {
 fn main() {
     let options = parse_command_line();
 
-    let pattern;
-    if options.ignore_case {
-        pattern = "(?i)".to_string() + &options.pattern;
-    } else {
-        pattern = options.pattern;
-    }
-    let reg = match Regex::new(&pattern) {
-        Ok(r) => r,
-        Err(err) => {
-            eprintln!("grepr: Error in pattern: {}", err);
-            std::process::exit(BAD_PATTERN);
-        }
-    };
 
     if options.display_pattern {
         eprintln!(
             "grepr: Regex is {:?} File count is {}",
-            reg,
+            &options.regex,
             options.files.len()
         );
     }
 
     let mut found = false;
     if options.files.is_empty() {
-        found = search_file(&reg, io::stdin().lock(), false, "stdin", true);
+        found = search_file(&options.regex, io::stdin().lock(), false, "stdin", true);
     } else {
         let mut single_file = options.files.len() == 1;
         for name in &options.files {
@@ -109,7 +100,7 @@ fn main() {
                     }
                 };
                 found = search_file(
-                    &reg,
+                    &options.regex,
                     BufReader::new(f),
                     options.display_filename,
                     file_name,
