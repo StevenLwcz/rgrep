@@ -3,31 +3,43 @@
  */
 
 use clap::{App, Arg, ArgMatches};
-use glob::glob;
 use regex::Regex;
 use regex::RegexBuilder;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
-use std::path::Path;
+// use std::path::Path;
+use std::env;
+use walkdir::{DirEntry, WalkDir, Error};
+
 
 const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
-const BAD_GLOB_PATTERN: i32 = 3;
+const BAD_FILE_PATTERN: i32 = 3;
 const OPEN_FILE_ERROR: i32 = 4;
 
 struct GrepOptions {
     regex: Regex,
-    files: Vec<String>,
+    files: Vec<Regex>,
     display_pattern: bool,
     display_filename: bool,
 }
 
 impl GrepOptions {
     fn new(matches: ArgMatches) -> GrepOptions {
+        let pattern_closure = | file | {
+            match Regex::new(file) {
+                Ok(r) => r,
+                Err(err) => {
+                    eprintln!("grepr: Error in file pattern: {}", err);
+                    std::process::exit(BAD_FILE_PATTERN);
+                }
+            }
+        };
+        
         let pattern = matches.value_of("pattern").unwrap();
         GrepOptions {
             files: match matches.values_of("file") {
-                Some(v) => v.map(String::from).collect(),
+                Some(v) => v.map(pattern_closure).collect(),
                 None => vec![],
             },
             regex: match RegexBuilder::new(pattern)
@@ -64,51 +76,20 @@ fn main() {
     if options.files.is_empty() {
         found = search_file(&options.regex, io::stdin().lock(), false, "stdin", true);
     } else {
-        let mut single_file = options.files.len() == 1;
-        for name in &options.files {
-            let gfiles = match glob(name) {
+        let files = find_files(options.files);
+        let single_file = files.len() == 1;
+        for file_name in files {
+            let file = match File::open(&file_name) {
+                Ok(r) => r,
                 Err(err) => {
-                    eprintln!("grepr: Pattern Error {:?}", err);
-                    std::process::exit(BAD_GLOB_PATTERN);
+                    eprintln!("grepr: Can't open file {} - {}", file_name, err);
+                    std::process::exit(OPEN_FILE_ERROR);
                 }
-                Ok(g) => g,
-            };
-            let mut count = 0;
-            for entry in gfiles {
-                let file_name = entry.unwrap();
-                let file_name = file_name.to_str().unwrap();
-                /* if file_name != name then a pattern got expanded so multi files */
-                if count == 0 && file_name != name {
-                    single_file = false;
-                }
-                let path = Path::new(&file_name);
-                if !single_file {
-                    if path.is_dir() {
-                        continue;
-                    }
-                }
-                count += 1;
-                // let f = match File::open(file_name) {
-                let f = match File::open(path) {
-                    Ok(r) => r,
-                    Err(err) => {
-                        eprintln!("grepr: Can't open file {} - {}", file_name, err);
-                        std::process::exit(OPEN_FILE_ERROR);
-                    }
-                };
-                found = search_file(
-                    &options.regex,
-                    BufReader::new(f),
-                    options.display_filename,
-                    file_name,
-                    single_file,
-                );
-            }
-            if count == 0 {
-                eprintln!("grepr: {} not found", name);
-            }
+           };
+           found = search_file(&options.regex, BufReader::new(file), options.display_filename, 
+                        &file_name, single_file);
         }
-    };
+    }
     if !found {
         std::process::exit(PATTERN_NOT_FOUND);
     }
@@ -145,10 +126,9 @@ fn parse_command_line() -> GrepOptions {
          )
         .arg(
             Arg::with_name("file")
-            .help("List of files. Glob pattens allowed\nIf no file specified \
-             then read from stdin\nSearch all Rust files in current and subdirectories for \
-             purple:\ngrepr purple \"**/*.rs\"\n\
-             https://docs.rs/glob/0.3.1/glob/struct.Pattern.html")
+            .help("List of files. File is treated as a Rust regex.\nIf no file specified \
+             then read from stdin\nSearch all Rust and Pythonfiles in current and subdirectories for \
+             purple:\ngrepr purple \".*.rs$ .*.py$\"\n")
             .multiple(true)
             .index(2)
          )
@@ -189,4 +169,42 @@ where
         }
     }
     found
+}
+
+fn find_files(res: Vec<Regex>) -> Vec<String>
+{
+    let name_filter = |entry: &DirEntry| {
+        if entry.file_type().is_file() {
+            res.iter().any(|re| re.is_match(&entry.file_name().to_string_lossy()))
+        } else {
+            if entry.file_type().is_dir(){
+                !entry.file_name().to_string_lossy().starts_with(".")
+            } else {
+                true
+            }
+        }
+    };
+
+    let dir_filter = | entry: Result<DirEntry,Error>| {
+        match entry {
+            Ok(entry) => {
+                if entry.file_type().is_file() {
+                    Some(entry.path().display().to_string())
+                } else {
+                    None
+                }
+            },
+            Err(_err) => None,
+       }
+    };
+
+    let current_dir = env::current_dir().unwrap();
+
+    let files: Vec<String> = WalkDir::new(current_dir)
+        .into_iter()
+        .filter_entry(name_filter)
+        .filter_map(dir_filter)
+        .collect();
+
+    files
 }
