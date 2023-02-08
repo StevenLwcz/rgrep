@@ -1,5 +1,6 @@
 /* TODO
  * add -c count option
+ * add -f option to be able to specify files rather than patterns
  */
 
 use clap::{App, Arg, ArgMatches};
@@ -99,7 +100,8 @@ fn parse_command_line() -> GrepOptions {
     let matches = App::new("grepr")
         .version("1.0.0")
         .author("Steven Lalewicz")
-        .about("A simple grep using Rust regular expressions\nhttps://docs.rs/regex/latest/regex/#syntax")
+        .about("A simple grep using Rust regular expressions\n\
+               https://docs.rs/regex/latest/regex/#syntax")
         .arg(
             Arg::with_name("ignore")
                 .help("Ignore case")
@@ -126,9 +128,10 @@ fn parse_command_line() -> GrepOptions {
          )
         .arg(
             Arg::with_name("file")
-            .help("List of files. File is treated as a Rust regex.\nIf no file specified \
-             then read from stdin\nSearch all Rust and Pythonfiles in current and subdirectories for \
-             purple:\ngrepr purple \".*.rs$ .*.py$\"\n")
+            .help("List of file patterns. The pattern is a Rust regular expression.\n\
+                  If no pattern is specified then read from stdin.\n\
+                  To search all Rust and Python files in current and subdirectories for purple:\n\
+                  grepr purple \".*.rs$ .*.py$\"\n")
             .multiple(true)
             .index(2)
          )
@@ -200,11 +203,9 @@ fn find_files(res: Vec<Regex>) -> Vec<String>
 
     let current_dir = env::current_dir().unwrap();
 
-    let files: Vec<String> = WalkDir::new(current_dir)
+    WalkDir::new(current_dir)
         .into_iter()
         .filter_entry(name_filter)
         .filter_map(dir_filter)
-        .collect();
-
-    files
+        .collect()
 }
