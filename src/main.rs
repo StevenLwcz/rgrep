@@ -9,7 +9,7 @@ use regex::RegexBuilder;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 // use std::path::Path;
-use std::env;
+// use std::env;
 use walkdir::{DirEntry, WalkDir, Error};
 
 
@@ -181,7 +181,8 @@ fn find_files(res: Vec<Regex>) -> Vec<String>
             res.iter().any(|re| re.is_match(&entry.file_name().to_string_lossy()))
         } else {
             if entry.file_type().is_dir(){
-                !entry.file_name().to_string_lossy().starts_with(".")
+                let file_name = entry.file_name().to_string_lossy();
+                !(file_name.len() > 1 && file_name.starts_with("."))
             } else {
                 true
             }
@@ -200,10 +201,8 @@ fn find_files(res: Vec<Regex>) -> Vec<String>
             Err(_err) => None,
        }
     };
-
-    let current_dir = env::current_dir().unwrap();
-
-    WalkDir::new(current_dir)
+    
+WalkDir::new(".")
         .into_iter()
         .filter_entry(name_filter)
         .filter_map(dir_filter)
