@@ -1,2 +1,2 @@
-tests/files/fruits.txt: apple:red
-tests/files/rainbow.txt: red
+./tests/files/rainbow.txt: red
+./tests/files/fruits.txt: apple:red

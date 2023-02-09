@@ -48,7 +48,7 @@ fn test4() {
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("red")
-        .arg("**/*.txt")
+        .arg(".*.txt$")
         .assert()
         .success()
         .stdout(expected);
@@ -61,7 +61,7 @@ fn test5() {
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("re")
-        .arg("tests/files/fruits.txt")
+        .arg("fruits.txt")
         .assert()
         .success()
         .stdout(expected);
@@ -74,8 +74,8 @@ fn test6() {
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("red")
-        .arg("tests/files/fruits.txt")
-        .arg("tests/files/rainbow.txt")
+        .arg("fruits.txt")
+        .arg("rainbow.txt")
         .assert()
         .success()
         .stdout(expected);
@@ -89,8 +89,8 @@ fn test7() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--ignore")
         .arg("RED")
-        .arg("tests/files/fruits.txt")
-        .arg("tests/files/rainbow.txt")
+        .arg("fruits.txt")
+        .arg("rainbow.txt")
         .assert()
         .success()
         .stdout(expected);
