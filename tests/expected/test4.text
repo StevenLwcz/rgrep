@@ -1,2 +1,2 @@
-./tests/files/rainbow.txt: red
-./tests/files/fruits.txt: apple:red
+rainbow.txt: red
+fruits.txt: apple:red
