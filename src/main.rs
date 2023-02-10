@@ -8,8 +8,8 @@ use regex::Regex;
 use regex::RegexBuilder;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
-// use std::path::Path;
-// use std::env;
+use std::path::PathBuf;
+use std::env;
 use walkdir::{DirEntry, WalkDir, Error};
 
 
@@ -75,7 +75,7 @@ fn main() {
 
     let mut found = false;
     if options.files.is_empty() {
-        found = search_file(&options.regex, io::stdin().lock(), false, "stdin", true);
+        found = search_file(&options.regex, io::stdin().lock(), false, PathBuf::new() , true);
     } else {
         let files = find_files(options.files);
         let single_file = files.len() == 1;
@@ -83,12 +83,12 @@ fn main() {
             let file = match File::open(&file_name) {
                 Ok(r) => r,
                 Err(err) => {
-                    eprintln!("grepr: Can't open file {} - {}", file_name, err);
+                    eprintln!("grepr: Can't open file {} - {}", file_name.to_string_lossy(), err);
                     std::process::exit(OPEN_FILE_ERROR);
                 }
            };
            found = search_file(&options.regex, BufReader::new(file), options.display_filename, 
-                        &file_name, single_file);
+                        file_name, single_file);
         }
     }
     if !found {
@@ -144,7 +144,7 @@ fn search_file<R>(
     reg: &Regex,
     reader: R,
     display_filename: bool,
-    filename: &str,
+    filename: PathBuf,
     single_file: bool,
 ) -> bool
 where
@@ -155,34 +155,33 @@ where
         let line = match line_result {
             Ok(r) => r,
             Err(err) => {
-                eprintln!("grepr: Problem reading from {} - {}", filename, err);
+                eprintln!("grepr: Problem reading from {} - {}", filename.to_string_lossy(), err);
                 break;
             }
         };
         if reg.is_match(&line) {
             found = true;
             if display_filename {
-                println!("{}", filename);
+                println!("{}", filename.to_string_lossy());
                 break;
             } else if single_file {
                 println!("{}", line);
             } else {
-                println!("{}: {}", filename, line);
+                println!("{}: {}", filename.file_name().unwrap().to_string_lossy(), line);
             }
         }
     }
     found
 }
 
-fn find_files(res: Vec<Regex>) -> Vec<String>
+fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
 {
     let name_filter = |entry: &DirEntry| {
         if entry.file_type().is_file() {
             res.iter().any(|re| re.is_match(&entry.file_name().to_string_lossy()))
         } else {
             if entry.file_type().is_dir(){
-                let file_name = entry.file_name().to_string_lossy();
-                !(file_name.len() > 1 && file_name.starts_with("."))
+                !entry.file_name().to_string_lossy().starts_with(".")
             } else {
                 true
             }
@@ -193,7 +192,7 @@ fn find_files(res: Vec<Regex>) -> Vec<String>
         match entry {
             Ok(entry) => {
                 if entry.file_type().is_file() {
-                    Some(entry.path().display().to_string())
+                    Some(entry.into_path())
                 } else {
                     None
                 }
@@ -201,8 +200,10 @@ fn find_files(res: Vec<Regex>) -> Vec<String>
             Err(_err) => None,
        }
     };
+
+    let current_dir = env::current_dir().unwrap();
     
-WalkDir::new(".")
+    WalkDir::new(current_dir)
         .into_iter()
         .filter_entry(name_filter)
         .filter_map(dir_filter)
