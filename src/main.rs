@@ -167,7 +167,7 @@ where
             } else if single_file {
                 println!("{}", line);
             } else {
-                println!("{}: {}", filename.file_name().unwrap().to_string_lossy(), line);
+                println!("{}: {}", filename.to_string_lossy(), line);
             }
         }
     }
@@ -188,11 +188,14 @@ fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
         }
     };
 
+    let current_dir = env::current_dir().unwrap();
+
     let dir_filter = | entry: Result<DirEntry,Error>| {
         match entry {
             Ok(entry) => {
                 if entry.file_type().is_file() {
-                    Some(entry.into_path())
+                    Some(entry.path().strip_prefix(&current_dir).unwrap()
+                                     .to_path_buf())
                 } else {
                     None
                 }
@@ -200,10 +203,8 @@ fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
             Err(_err) => None,
        }
     };
-
-    let current_dir = env::current_dir().unwrap();
     
-    WalkDir::new(current_dir)
+    WalkDir::new(&current_dir)
         .into_iter()
         .filter_entry(name_filter)
         .filter_map(dir_filter)
