@@ -75,7 +75,7 @@ fn main() {
 
     let mut found = false;
     if options.files.is_empty() {
-        found = search_file(&options.regex, io::stdin().lock(), false, PathBuf::new() , true);
+        found = search_file(&options.regex, io::stdin().lock(), false, PathBuf::new(), true);
     } else {
         let files = find_files(options.files);
         let single_file = files.len() == 1;
@@ -100,11 +100,11 @@ fn parse_command_line() -> GrepOptions {
     let matches = App::new("grepr")
         .version("1.0.0")
         .author("Steven Lalewicz")
-        .about("A simple grep using Rust regular expressions\n\
+        .about("A simple rgrep using Rust regular expressions\n\
                https://docs.rs/regex/latest/regex/#syntax")
         .arg(
             Arg::with_name("ignore")
-                .help("Ignore case")
+                .help("Ignore case for pattern")
                 .short("i")
                 .long("ignore")
         )
@@ -129,9 +129,13 @@ fn parse_command_line() -> GrepOptions {
         .arg(
             Arg::with_name("file")
             .help("List of file patterns. The pattern is a Rust regular expression.\n\
-                  If no pattern is specified then read from stdin.\n\
-                  To search all Rust and Python files in current and subdirectories for purple:\n\
-                  grepr purple \".*.rs$ .*.py$\"\n")
+                  \nIf no file pattern is specified then read from stdin.\n\
+                  Otherwise automatically scan the current and all sub directories for\n\
+                  the file pattern skipping any directory starting with a period.\n\
+                  \nTo search all Rust and Python files in current and subdirectories for purple:\n\
+                  grepr purple \".*\\.(rs|py)$\"\n\
+                  \nTo search all .txt regardless of case:\n\
+                  grepr purple \"(?i).*\\.txt$\"\n")
             .multiple(true)
             .index(2)
          )

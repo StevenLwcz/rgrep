@@ -42,12 +42,12 @@ fn test3() {
 
 #[test]
 fn test4() {
-    // test **/*.txt glob expansion
+    // test .*\.txt$ expression finds all .txt files
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("red")
-        .arg(".*.txt$")
+        .arg(r".*\.txt$")
         .assert()
         .success()
         .stdout(expected);
@@ -121,4 +121,18 @@ fn test9() {
         .failure()
         .code(BAD_FILE_PATTERN)
         .stderr(expected);
+}
+
+#[test]
+fn test10() {
+    // test --display
+    let testfile = "tests/expected/test10.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("--display")
+        .arg("red")
+        .arg("txt$")
+        .assert()
+        .success()
+        .stdout(expected);
 }
