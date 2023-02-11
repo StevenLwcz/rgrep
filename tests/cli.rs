@@ -3,8 +3,7 @@ use std::fs;
 
 const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
-// const BAD_GLOB_PATTERN: i32 = 3;
-// const OPEN_FILE_ERROR: i32 = 4;
+const BAD_FILE_PATTERN: i32 = 3;
 
 #[test]
 fn test1() {
@@ -89,9 +88,37 @@ fn test7() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--ignore")
         .arg("RED")
-        .arg("fruits.txt")
-        .arg("rainbow.txt")
+        .arg(r".*\.txt$")
         .assert()
         .success()
         .stdout(expected);
+}
+
+#[test]
+fn test8() {
+    // test (?i) in file pattern
+    let testfile = "tests/expected/test8.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("--ignore")
+        .arg("ORANGE")
+        .arg(r"(?i).*\.txt$")
+        .assert()
+        .success()
+        .stdout(expected);
+}
+
+#[test]
+fn test9() {
+    // test invalid file pattern ?q is bad flag goes to stderr
+    let testfile = "tests/expected/test9.text";
+    let expected = fs::read_to_string(testfile).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("--ignore")
+        .arg("PURPLE")
+        .arg(r"(?q).*\.txt$")
+        .assert()
+        .failure()
+        .code(BAD_FILE_PATTERN)
+        .stderr(expected);
 }

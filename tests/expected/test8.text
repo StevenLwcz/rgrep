@@ -1,0 +1,3 @@
+tests/files/fruits.txt: orange:orange
+tests/files/rainbow.txt: orange
+tests/files/colours.TXT: orange
