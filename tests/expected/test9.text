@@ -1,4 +1,4 @@
 grepr: Error in file pattern: regex parse error:
-    (?q).*\.txt$
+    (?q)\.txt$
       ^
 error: unrecognized flag

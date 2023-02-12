@@ -1,17 +1,16 @@
-/* TODO
+/* 
+ * TODO (maybe)
  * add -c count option
  * add -f option to be able to specify files rather than patterns
  */
 
 use clap::{App, Arg, ArgMatches};
-use regex::Regex;
-use regex::RegexBuilder;
+use regex::{Regex, RegexBuilder};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::PathBuf;
 use std::env;
 use walkdir::{DirEntry, WalkDir, Error};
-
 
 const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
@@ -64,21 +63,21 @@ impl GrepOptions {
 fn main() {
     let options = parse_command_line();
 
-
     if options.display_pattern {
-        eprintln!(
-            "grepr: Regex is {:?} File count is {}",
-            &options.regex,
-            options.files.len()
-        );
+        eprintln!("grepr: Regex is {:?}", &options.regex);
     }
 
-    let mut found = false;
+    let mut count = 0;
     if options.files.is_empty() {
-        found = search_file(&options.regex, io::stdin().lock(), false, PathBuf::new(), true);
+        count = search_file(&options.regex, io::stdin().lock(), false, PathBuf::new(), true);
     } else {
+
         let files = find_files(options.files);
+        if options.display_pattern {
+            eprintln!("grepr: Number of files to search is {}", files.len());
+        }
         let single_file = files.len() == 1;
+
         for file_name in files {
             let file = match File::open(&file_name) {
                 Ok(r) => r,
@@ -87,11 +86,11 @@ fn main() {
                     std::process::exit(OPEN_FILE_ERROR);
                 }
            };
-           found = search_file(&options.regex, BufReader::new(file), options.display_filename, 
+           count += search_file(&options.regex, BufReader::new(file), options.display_filename, 
                         file_name, single_file);
         }
     }
-    if !found {
+    if count == 0 {
         std::process::exit(PATTERN_NOT_FOUND);
     }
 }
@@ -99,7 +98,7 @@ fn main() {
 fn parse_command_line() -> GrepOptions {
     let matches = App::new("grepr")
         .version("1.0.0")
-        .author("Steven Lalewicz")
+        .author("Steven Lalewicz 02-2023")
         .about("A simple rgrep using Rust regular expressions\n\
                https://docs.rs/regex/latest/regex/#syntax")
         .arg(
@@ -116,7 +115,7 @@ fn parse_command_line() -> GrepOptions {
         )
         .arg(
             Arg::with_name("verbose")
-                .help("Show the pattern")
+                .help("Show the pattern and file count")
                 .short("v")
                 .long("verbose")
         )
@@ -133,9 +132,9 @@ fn parse_command_line() -> GrepOptions {
                   Otherwise automatically scan the current and all sub directories for\n\
                   the file pattern skipping any directory starting with a period.\n\
                   \nTo search all Rust and Python files in current and subdirectories for purple:\n\
-                  grepr purple \".*\\.(rs|py)$\"\n\
+                  grepr purple \"\\.(rs|py)$\"\n\
                   \nTo search all .txt regardless of case:\n\
-                  grepr purple \"(?i).*\\.txt$\"\n")
+                  grepr purple \"(?i)\\.txt$\"\n")
             .multiple(true)
             .index(2)
          )
@@ -150,11 +149,11 @@ fn search_file<R>(
     display_filename: bool,
     filename: PathBuf,
     single_file: bool,
-) -> bool
+) -> u32
 where
     R: BufRead,
 {
-    let mut found = false;
+    let mut count = 0;
     for line_result in reader.lines() {
         let line = match line_result {
             Ok(r) => r,
@@ -164,7 +163,7 @@ where
             }
         };
         if reg.is_match(&line) {
-            found = true;
+            count+=1;
             if display_filename {
                 println!("{}", filename.to_string_lossy());
                 break;
@@ -175,7 +174,7 @@ where
             }
         }
     }
-    found
+    count
 }
 
 fn find_files(res: Vec<Regex>) -> Vec<PathBuf>

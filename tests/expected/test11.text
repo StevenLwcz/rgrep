@@ -1,0 +1,4 @@
+tests/files/fruits.txt: grape:indigo
+tests/files/rainbow.txt: indigo
+tests/files/test10.py: print("indigo")
+tests/files/test10.rs:     println!("indigo");

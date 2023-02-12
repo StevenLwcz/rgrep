@@ -42,12 +42,12 @@ fn test3() {
 
 #[test]
 fn test4() {
-    // test .*\.txt$ expression finds all .txt files
+    // test \.txt$ expression finds all .txt files
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("red")
-        .arg(r".*\.txt$")
+        .arg(r"\.txt$")
         .assert()
         .success()
         .stdout(expected);
@@ -88,7 +88,7 @@ fn test7() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--ignore")
         .arg("RED")
-        .arg(r".*\.txt$")
+        .arg(r"\.txt$")
         .assert()
         .success()
         .stdout(expected);
@@ -102,7 +102,7 @@ fn test8() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--ignore")
         .arg("ORANGE")
-        .arg(r"(?i).*\.txt$")
+        .arg(r"(?i)\.txt$")
         .assert()
         .success()
         .stdout(expected);
@@ -116,7 +116,7 @@ fn test9() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--ignore")
         .arg("PURPLE")
-        .arg(r"(?q).*\.txt$")
+        .arg(r"(?q)\.txt$")
         .assert()
         .failure()
         .code(BAD_FILE_PATTERN)
@@ -131,8 +131,26 @@ fn test10() {
     let mut cmd = Command::cargo_bin("grepr").unwrap();
     cmd.arg("--display")
         .arg("red")
-        .arg("txt$")
+        .arg(r"\.txt$")
         .assert()
         .success()
         .stdout(expected);
+}
+
+#[test]
+fn test11() {
+    // test -v and multiple file patterns
+    let testfile1 = "tests/expected/test11.text";
+    let testfile2 = "tests/expected/test11.stderr.text";
+    let expected1 = fs::read_to_string(testfile1).unwrap();
+    let expected2 = fs::read_to_string(testfile2).unwrap();
+    let mut cmd = Command::cargo_bin("grepr").unwrap();
+    cmd.arg("-v")
+        .arg(r"\bi\w+o\b")
+        .arg(r"\.(rs|py)$")
+        .arg(r"\.txt$")
+        .assert()
+        .success()
+        .stdout(expected1)
+        .stderr(expected2);
 }
