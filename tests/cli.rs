@@ -5,6 +5,11 @@ const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
 const BAD_FILE_PATTERN: i32 = 3;
 
+/*
+ * TODO sort stdout so it is not dependant on order of files in the file system
+ * Get tests working on Windows
+ */
+
 #[test]
 fn test1() {
     // basic it works test from stdin

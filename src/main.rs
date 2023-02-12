@@ -1,3 +1,8 @@
+/*
+ * grepr: Search for files matching 'file patterns' and then search these files for 'pattern'.
+ * Kind of like find ... -exec grep on UNIX and findstr /s on Windows
+ */
+
 /* 
  * TODO (maybe)
  * add -c count option
@@ -23,6 +28,8 @@ struct GrepOptions {
     display_pattern: bool,
     display_filename: bool,
 }
+
+/* Handle command line arguments and create all Regex objects */
 
 impl GrepOptions {
     fn new(matches: ArgMatches) -> GrepOptions {
@@ -58,7 +65,9 @@ impl GrepOptions {
     }
 }
 
-/* -------------------------------------------------------------- */
+/*
+ * 
+ */
 
 fn main() {
     let options = parse_command_line();
@@ -94,6 +103,10 @@ fn main() {
         std::process::exit(PATTERN_NOT_FOUND);
     }
 }
+
+/*
+ * Parse command line arguments and return GrepOptions
+ */
 
 fn parse_command_line() -> GrepOptions {
     let matches = App::new("grepr")
@@ -143,6 +156,10 @@ fn parse_command_line() -> GrepOptions {
     GrepOptions::new(matches)
 }
 
+/*
+ * Search a file/stdin for the regex pattern and return a count of number of matches
+ */
+
 fn search_file<R>(
     reg: &Regex,
     reader: R,
@@ -177,8 +194,19 @@ where
     count
 }
 
+/* 
+ * Return a vector of PathBuf for all the files we want to search
+ * Uses walkdir crate to iterate directories
+ */
+
 fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
 {
+    /* 
+     * Used for walkdir filter_entry 
+     * Skip directories which start with a period
+     * skip files which don't match one of the list of regular expressions
+     */
+
     let name_filter = |entry: &DirEntry| {
         if entry.file_type().is_file() {
             res.iter().any(|re| re.is_match(&entry.file_name().to_string_lossy()))
@@ -192,6 +220,13 @@ fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
     };
 
     let current_dir = env::current_dir().unwrap();
+
+    /*
+     * Used for filter_map
+     * Skip entries which gave an error (If I can't access it I'm not worried)
+     * Don't add directories to the final vector of PathBuf
+     * Return the relative path of the file to the current directory
+     */
 
     let dir_filter = | entry: Result<DirEntry,Error>| {
         match entry {
