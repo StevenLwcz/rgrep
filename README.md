@@ -28,7 +28,7 @@ I'm learning Rust. What else does one write for their first app? :)
                      the file pattern skipping any directory starting with a period.
                  
                      To search all Rust and Python files in current and subdirectories for purple:
-                     grepr purple ".*\.(rs|py)$"
+                     grepr purple *\.(rs|py)$"
                  
                      To search all .txt regardless of case:
-                     grepr purple "(?i).*\.txt$"
+                     grepr purple "(?i)\.txt$"
