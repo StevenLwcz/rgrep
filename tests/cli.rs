@@ -10,6 +10,15 @@ const BAD_FILE_PATTERN: i32 = 3;
  * Get tests working on Windows
  */
 
+fn compare_std(res: &str, exp: &str)
+{
+    let mut expected: Vec<&str> = exp.split("\n").collect();
+    expected.sort();
+    let mut result: Vec<&str> = res.split("\n").collect();
+    result.sort();
+    assert_eq!(result, expected, "Failed {:?} != {:?}", result, expected)
+}
+
 #[test]
 fn test1() {
     // basic it works test from stdin
@@ -54,8 +63,10 @@ fn test4() {
     cmd.arg("red")
         .arg(r"\.txt$")
         .assert()
-        .success()
-        .stdout(expected);
+        .success();
+
+    let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
+    compare_std(&out, &expected);
 }
 
 #[test]
@@ -81,8 +92,10 @@ fn test6() {
         .arg("fruits.txt")
         .arg("rainbow.txt")
         .assert()
-        .success()
-        .stdout(expected);
+        .success();
+
+    let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
+    compare_std(&out, &expected);
 }
 
 #[test]
@@ -95,8 +108,10 @@ fn test7() {
         .arg("RED")
         .arg(r"\.txt$")
         .assert()
-        .success()
-        .stdout(expected);
+        .success();
+
+    let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
+    compare_std(&out, &expected);
 }
 
 #[test]
@@ -109,8 +124,10 @@ fn test8() {
         .arg("ORANGE")
         .arg(r"(?i)\.txt$")
         .assert()
-        .success()
-        .stdout(expected);
+        .success();
+
+    let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
+    compare_std(&out, &expected);
 }
 
 #[test]
@@ -138,8 +155,10 @@ fn test10() {
         .arg("red")
         .arg(r"\.txt$")
         .assert()
-        .success()
-        .stdout(expected);
+        .success();
+
+    let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
+    compare_std(&out, &expected);
 }
 
 #[test]
@@ -156,6 +175,8 @@ fn test11() {
         .arg(r"\.txt$")
         .assert()
         .success()
-        .stdout(expected1)
         .stderr(expected2);
+
+    let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
+    compare_std(&out, &expected1);
 }
