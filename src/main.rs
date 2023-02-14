@@ -210,13 +210,12 @@ fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
     let name_filter = |entry: &DirEntry| {
         if entry.file_type().is_file() {
             res.iter().any(|re| re.is_match(&entry.file_name().to_string_lossy()))
-        } else {
-            if entry.file_type().is_dir(){
-                !entry.file_name().to_string_lossy().starts_with(".")
+         } else if entry.file_type().is_dir(){
+                !entry.file_name().to_string_lossy().starts_with('.')
             } else {
                 true
             }
-        }
+        
     };
 
     let current_dir = env::current_dir().unwrap();
