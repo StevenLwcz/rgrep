@@ -5,11 +5,19 @@ const PATTERN_NOT_FOUND: i32 = 1;
 const BAD_PATTERN: i32 = 2;
 const BAD_FILE_PATTERN: i32 = 3;
 
-/*
- * TODO sort stdout so it is not dependant on order of files in the file system
- * Get tests working on Windows
- */
+/* replace \ with / on results for Windows */
+#[cfg(windows)]
+fn compare_std(res: &str, exp: &str)
+{
+    let mut expected: Vec<&str> = exp.split("\n").collect();
+    expected.sort();
+    let result = res.replace(r"\","/");
+    let mut result: Vec<&str> = result.split("\n").collect();
+    result.sort();
+    assert_eq!(result, expected, "Failed {:?} != {:?}", result, expected)
+}
 
+#[cfg(not(windows))]
 fn compare_std(res: &str, exp: &str)
 {
     let mut expected: Vec<&str> = exp.split("\n").collect();
