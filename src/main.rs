@@ -5,8 +5,9 @@
 
 /* 
  * TODO (maybe)
- * add -c count option
- * add -f option to be able to specify files rather than patterns
+ * add -n --number count number of matches 
+ * add -f --file option to be able to specify files rather than patterns
+ * add -c --colour colour option to display the matched text in green
  */
 
 use clap::{App, Arg, ArgMatches};
@@ -29,10 +30,22 @@ struct GrepOptions {
     display_filename: bool,
 }
 
-/* Handle command line arguments and create all Regex objects */
 
+fn ext_to_vec(i: clap::Values) -> Vec<Regex> {
+    let pattern = "\\.(".to_owned() + &(i.collect::<Vec<&str>>().join("|")) + ")$";
+    match Regex::new(&pattern) {
+        Ok(r) => vec![r],
+        Err(err) => {
+             eprintln!("grepr: Error in ext pattern: {}", err);
+             std::process::exit(BAD_FILE_PATTERN);
+        }
+    }
+}
+
+/* Handle command line arguments and create all Regex objects */
+        
 impl GrepOptions {
-    fn new(matches: ArgMatches) -> GrepOptions {
+    fn new(matches: ArgMatches) -> Self {
         let pattern_closure = | file | {
             match Regex::new(file) {
                 Ok(r) => r,
@@ -42,13 +55,17 @@ impl GrepOptions {
                 }
             }
         };
-        
+
         let pattern = matches.value_of("pattern").unwrap();
-        GrepOptions {
+        Self {
             files: match matches.values_of("file") {
-                Some(v) => v.map(pattern_closure).collect(),
-                None => vec![],
-            },
+                       Some(v) => v.map(pattern_closure).collect(),
+                       None => match matches.values_of("ext") {
+                               Some(e) => ext_to_vec(e),
+                               None => vec![],
+                           }
+                       },
+
             regex: match RegexBuilder::new(pattern)
                 .case_insensitive(matches.is_present("ignore"))
                 .build() {
@@ -132,6 +149,14 @@ fn parse_command_line() -> GrepOptions {
                 .short("v")
                 .long("verbose")
         )
+        .arg(
+            Arg::with_name("ext")
+            .help("file extension: -e rs py")
+            .value_name("EXT")
+            .short("e")
+            .takes_value(true)
+            .multiple(true)
+         )
         .arg(
             Arg::with_name("pattern")
             .help("Rust regular expression")
