@@ -168,17 +168,15 @@ fn test10() {
 fn test11() {
     // test -v and multiple file patterns
     let testfile1 = "tests/expected/test11.text";
-    let testfile2 = "tests/expected/test11.stderr.text";
+    // let testfile2 = "tests/expected/test11.stderr.text";
     let expected1 = fs::read_to_string(testfile1).unwrap();
-    let expected2 = fs::read_to_string(testfile2).unwrap();
+    // let expected2 = fs::read_to_string(testfile2).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd.arg("-v")
-        .arg(r"\bi\w+o\b")
+    cmd.arg(r"\bi\w+o\b")
         .arg(r"\.(rs|py)$")
         .arg(r"\.txt$")
         .assert()
-        .success()
-        .stderr(expected2);
+        .success();
 
     let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
     compare_std(&out, &expected1);

@@ -178,7 +178,7 @@ fn parse_command_line() -> GrepOptions {
         )
         .arg(
             Arg::with_name("verbose")
-                .help("Show pattern, number of files to searchand timing info")
+                .help("Show patterns, number of files to search and timings")
                 .short("v")
                 .long("verbose"),
         )
