@@ -235,7 +235,7 @@ where
  * Uses walkdir crate to iterate directories
  */
 
-fn find_files(res: &Vec<Regex>) -> Vec<PathBuf>
+fn find_files(res: &[Regex]) -> Vec<PathBuf>
 {
     /* 
      * Used for walkdir filter_entry 
