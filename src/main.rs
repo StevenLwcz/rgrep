@@ -15,6 +15,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::PathBuf;
+use std::time::Instant;
 use walkdir::{DirEntry, Error, WalkDir};
 
 const PATTERN_NOT_FOUND: i32 = 1;
@@ -25,7 +26,7 @@ const OPEN_FILE_ERROR: i32 = 4;
 struct GrepOptions {
     regex: Regex,
     files: Vec<Regex>,
-    display_pattern: bool,
+    verbose: bool,
     display_filename: bool,
     display_count: bool,
 }
@@ -75,7 +76,7 @@ impl GrepOptions {
                 }
             },
 
-            display_pattern: matches.is_present("verbose"),
+            verbose: matches.is_present("verbose"),
             display_filename: matches.is_present("display"),
             display_count: matches.is_present("count"),
         }
@@ -89,7 +90,7 @@ impl GrepOptions {
 fn main() {
     let options = parse_command_line();
 
-    if options.display_pattern {
+    if options.verbose {
         eprintln!("grepr: Regex is {:?}", &options.regex);
     }
 
@@ -97,12 +98,16 @@ fn main() {
     if options.files.is_empty() {
         count = search_file(&options, io::stdin().lock(), PathBuf::new(), true);
     } else {
+        let start = Instant::now();
         let files = find_files(&options.files);
-        if options.display_pattern {
-            eprintln!("grepr: Number of files to search is {}", files.len());
+        let duration = start.elapsed();
+        if options.verbose {
+            println!("grepr: Time elapsed in find files is: {:?}", duration);
+            println!("grepr: Number of files to search is {}", files.len());
         }
         let single_file = files.len() == 1;
 
+        let start = Instant::now();
         for file_name in files {
             let file = match File::open(&file_name) {
                 Ok(r) => r,
@@ -116,6 +121,10 @@ fn main() {
                 }
             };
             count += search_file(&options, BufReader::new(file), file_name, single_file);
+        }
+        let duration = start.elapsed();
+        if options.verbose {
+            println!("grepr: Time elapsed in file search is: {:?}", duration);
         }
     }
     if options.display_count {
