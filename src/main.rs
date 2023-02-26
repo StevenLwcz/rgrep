@@ -92,6 +92,7 @@ fn main() {
 
     if options.verbose {
         eprintln!("grepr: Regex is {:?}", &options.regex);
+        eprintln!("grepr: File Regex is {:?}", &options.files);
     }
 
     let mut count = 0;
@@ -102,8 +103,8 @@ fn main() {
         let files = find_files(&options.files);
         let duration = start.elapsed();
         if options.verbose {
-            println!("grepr: Time elapsed in find files is: {:?}", duration);
-            println!("grepr: Number of files to search is {}", files.len());
+            eprintln!("grepr: Time elapsed in find files is: {:?}", duration);
+            eprintln!("grepr: Number of files to search is {}", files.len());
         }
         let single_file = files.len() == 1;
 
@@ -124,7 +125,7 @@ fn main() {
         }
         let duration = start.elapsed();
         if options.verbose {
-            println!("grepr: Time elapsed in file search is: {:?}", duration);
+            eprintln!("grepr: Time elapsed in file search is: {:?}", duration);
         }
     }
     if options.display_count {
@@ -167,13 +168,13 @@ fn parse_command_line() -> GrepOptions {
         )
         .arg(
             Arg::with_name("verbose")
-                .help("Show the pattern and file count")
+                .help("Show pattern, number of files to searchand timing info")
                 .short("v")
                 .long("verbose"),
         )
         .arg(
             Arg::with_name("ext")
-                .help("file extension: -e rs py")
+                .help("file extension: -e rs py -e \"c(bl|py)\"")
                 .value_name("EXT")
                 .short("e")
                 .takes_value(true)
