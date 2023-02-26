@@ -7,19 +7,17 @@ const BAD_FILE_PATTERN: i32 = 3;
 
 /* replace \ with / on results for Windows */
 #[cfg(windows)]
-fn compare_std(res: &str, exp: &str)
-{
+fn compare_std(res: &str, exp: &str) {
     let mut expected: Vec<&str> = exp.split("\n").collect();
     expected.sort();
-    let result = res.replace(r"\","/");
+    let result = res.replace(r"\", "/");
     let mut result: Vec<&str> = result.split("\n").collect();
     result.sort();
     assert_eq!(result, expected, "Failed {:?} != {:?}", result, expected)
 }
 
 #[cfg(not(windows))]
-fn compare_std(res: &str, exp: &str)
-{
+fn compare_std(res: &str, exp: &str) {
     let mut expected: Vec<&str> = exp.split("\n").collect();
     expected.sort();
     let mut result: Vec<&str> = res.split("\n").collect();
@@ -68,10 +66,7 @@ fn test4() {
     let testfile = "tests/expected/test4.text";
     let expected = fs::read_to_string(testfile).unwrap();
     let mut cmd = Command::cargo_bin("grepr").unwrap();
-    cmd.arg("red")
-        .arg(r"\.txt$")
-        .assert()
-        .success();
+    cmd.arg("red").arg(r"\.txt$").assert().success();
 
     let out = String::from_utf8(cmd.assert().get_output().stdout.clone()).unwrap();
     compare_std(&out, &expected);
