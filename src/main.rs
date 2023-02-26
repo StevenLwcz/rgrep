@@ -5,7 +5,6 @@
 
 /* 
  * TODO (maybe)
- * add -n --number count number of matches 
  * add -f --file option to be able to specify files rather than patterns
  * add -c --colour colour option to display the matched text in green
  */
@@ -28,11 +27,13 @@ struct GrepOptions {
     files: Vec<Regex>,
     display_pattern: bool,
     display_filename: bool,
+    display_count: bool,
 }
 
 
 fn ext_to_vec(i: clap::Values) -> Vec<Regex> {
-    let pattern = "\\.(".to_owned() + &(i.collect::<Vec<&str>>().join("|")) + ")$";
+    let pattern = String::from("\\.(");
+    let pattern = pattern + &(i.collect::<Vec<&str>>().join("|")) + ")$";
     match Regex::new(&pattern) {
         Ok(r) => vec![r],
         Err(err) => {
@@ -78,6 +79,7 @@ impl GrepOptions {
 
             display_pattern: matches.is_present("verbose"),
             display_filename: matches.is_present("display"),
+            display_count: matches.is_present("count"),
         }
     }
 }
@@ -95,10 +97,10 @@ fn main() {
 
     let mut count = 0;
     if options.files.is_empty() {
-        count = search_file(&options.regex, io::stdin().lock(), false, PathBuf::new(), true);
+        count = search_file(&options, io::stdin().lock(), PathBuf::new(), true);
     } else {
 
-        let files = find_files(options.files);
+        let files = find_files(&options.files);
         if options.display_pattern {
             eprintln!("grepr: Number of files to search is {}", files.len());
         }
@@ -112,9 +114,11 @@ fn main() {
                     std::process::exit(OPEN_FILE_ERROR);
                 }
            };
-           count += search_file(&options.regex, BufReader::new(file), options.display_filename, 
-                        file_name, single_file);
+           count += search_file(&options, BufReader::new(file), file_name, single_file);
         }
+    }
+    if options.display_count {
+        println!("{}", count);
     }
     if count == 0 {
         std::process::exit(PATTERN_NOT_FOUND);
@@ -132,16 +136,22 @@ fn parse_command_line() -> GrepOptions {
         .about("A simple rgrep using Rust regular expressions\n\
                https://docs.rs/regex/latest/regex/#syntax")
         .arg(
-            Arg::with_name("ignore")
-                .help("Ignore case for pattern")
-                .short("i")
-                .long("ignore")
+            Arg::with_name("count")
+                .help("Only display the number of files which match the pattern")
+                .short("n")
+                .long("number")
         )
         .arg(
             Arg::with_name("display")
                 .help("Only display filenames of files which match pattern")
                 .short("d")
                 .long("display")
+        )
+        .arg(
+            Arg::with_name("ignore")
+                .help("Ignore case for pattern")
+                .short("i")
+                .long("ignore")
         )
         .arg(
             Arg::with_name("verbose")
@@ -186,9 +196,8 @@ fn parse_command_line() -> GrepOptions {
  */
 
 fn search_file<R>(
-    reg: &Regex,
+    options: &GrepOptions,
     reader: R,
-    display_filename: bool,
     filename: PathBuf,
     single_file: bool,
 ) -> u32
@@ -204,9 +213,11 @@ where
                 break;
             }
         };
-        if reg.is_match(&line) {
+        if options.regex.is_match(&line) {
             count+=1;
-            if display_filename {
+            if options.display_count {
+                break;
+            } else if options.display_filename {
                 println!("{}", filename.to_string_lossy());
                 break;
             } else if single_file {
@@ -224,7 +235,7 @@ where
  * Uses walkdir crate to iterate directories
  */
 
-fn find_files(res: Vec<Regex>) -> Vec<PathBuf>
+fn find_files(res: &Vec<Regex>) -> Vec<PathBuf>
 {
     /* 
      * Used for walkdir filter_entry 
