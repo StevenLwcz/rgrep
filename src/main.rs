@@ -7,6 +7,7 @@
  * TODO (maybe)
  * add -f --file option to be able to specify files rather than patterns
  * add -c --colour colour option to display the matched text in green
+ * Add tests for -e option.
  */
 
 use clap::{App, Arg, ArgMatches};
@@ -32,8 +33,17 @@ struct GrepOptions {
 }
 
 fn ext_to_vec(i: clap::Values) -> Vec<Regex> {
-    let pattern = String::from("\\.(");
-    let pattern = pattern + &(i.collect::<Vec<&str>>().join("|")) + ")$";
+    let mut pattern = String::from("\\.");
+    let ext = i.collect::<Vec<&str>>();
+
+    if ext.len() == 1 {
+        pattern += ext[0];
+    } else {
+        pattern = pattern + "(" + &ext.join("|") + ")";
+    }
+
+    pattern += "$";
+
     match Regex::new(&pattern) {
         Ok(r) => vec![r],
         Err(err) => {
